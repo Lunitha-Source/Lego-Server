@@ -28,6 +28,15 @@ namespace {
 	std::vector<uint32_t> claimCodes;
 }
 
+
+int GenerateBCryptPassword(const std::string& password, const int workFactor, char salt[BCRYPT_HASHSIZE], char hash[BCRYPT_HASHSIZE]) {
+	int32_t bcryptState = ::bcrypt_gensalt(workFactor, salt);
+	assert(bcryptState == 0);
+	bcryptState = ::bcrypt_hashpw(password.c_str(), salt, hash);
+	assert(bcryptState == 0);
+	return 0;
+}
+
 void Stamp::Serialize(RakNet::BitStream& outBitStream){
 	outBitStream.Write(type);
 	outBitStream.Write(value);
@@ -151,12 +160,31 @@ void AuthPackets::HandleLoginRequest(dServer* server, Packet* packet) {
 	// Fetch account details
 	auto accountInfo = Database::Get()->GetAccountInfo(username);
 
-	if (!accountInfo) {
-		LOG("No user by name %s found!", username.c_str());
-		stamps.emplace_back(eStamps::PASSPORT_AUTH_ERROR, 1);
-		AuthPackets::SendLoginResponse(server, packet->systemAddress, eLoginResponse::INVALID_USER, "", "", 2001, username, stamps);
-		return;
+	if (!accountInfo)
+	{
+		LOG("No user by name %s found! Creating new account...", username.c_str());
+
+		//Generate new hash for bcrypt
+		char salt[BCRYPT_HASHSIZE];
+		char hash[BCRYPT_HASHSIZE];
+		int res = GenerateBCryptPassword(password, 12, salt, hash);
+		assert(res == 0);
+
+		//Create account
+		try {
+			Database::Get()->InsertNewAccount(username, std::string(hash, BCRYPT_HASHSIZE));
+		} catch (std::exception& e) {
+			LOG("SQL error while creating account:\n%s", e.what());
+			stamps.emplace_back(eStamps::PASSPORT_AUTH_ERROR, 1);
+			AuthPackets::SendLoginResponse(server, packet->systemAddress, eLoginResponse::INTERNAL_ERROR, "", "", 2001, username, stamps);
+			return;
+		}
+
+		accountInfo = Database::Get()->GetAccountInfo(username);
+		Database::Get()->UpdateAccountGmLevel(accountInfo->id, eGameMasterLevel::CIVILIAN);
 	}
+
+	accountInfo = Database::Get()->GetAccountInfo(username);
 
 	//If we aren't running in live mode, then only GMs are allowed to enter:
 	const auto& closedToNonDevs = Game::config->GetValue("closed_to_non_devs");
