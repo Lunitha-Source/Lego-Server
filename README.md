@@ -12,7 +12,7 @@ DarkflameServer is a server emulator that allows the game to be played again.
 Below are the changes we have made to the original DarkflameServer source:  
 | Feature               | Description                                                                 | Status   |
 |-----------------------|-----------------------------------------------------------------------------|----------|
-| Auto Account Creation | Automatically creates new accounts when players log in with new credentials | Untested |  
+| Auto Account Creation | Automatically creates new accounts when players log in with new credentials | Applied  |  
 
 **Security**: All passwords are properly hashed using BCrypt before storage.
 
