@@ -165,7 +165,7 @@ void AuthPackets::HandleLoginRequest(dServer* server, Packet* packet) {
 		//Generate new hash for bcrypt
 		char salt[BCRYPT_HASHSIZE];
 		char hash[BCRYPT_HASHSIZE];
-		int res = GenerateBCryptPassword(password, 12, salt, hash);
+		int res = GenerateBCryptPassword(password.GetAsString().c_str(), 12, salt, hash);
 		assert(res == 0);
 
 		//Create account
@@ -174,7 +174,7 @@ void AuthPackets::HandleLoginRequest(dServer* server, Packet* packet) {
 		} catch (std::exception& e) {
 			LOG("SQL error while creating account:\n%s", e.what());
 			stamps.emplace_back(eStamps::PASSPORT_AUTH_ERROR, 1);
-			AuthPackets::SendLoginResponse(server, packet->systemAddress, eLoginResponse::INTERNAL_ERROR, "", "", 2001, username, stamps);
+			AuthPackets::SendLoginResponse(server, packet->systemAddress, eLoginResponse::INVALID_USER, "", "", 2001, username, stamps);
 			return;
 		}
 
