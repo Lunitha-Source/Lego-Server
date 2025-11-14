@@ -70,7 +70,7 @@ class CharacterComponent final : public Component {
 public:
 	static constexpr eReplicaComponentType ComponentType = eReplicaComponentType::CHARACTER;
 
-	CharacterComponent(Entity* parent, Character* character, const SystemAddress& systemAddress);
+	CharacterComponent(Entity* parent, const int32_t componentID, Character* character, const SystemAddress& systemAddress);
 	~CharacterComponent() override;
 
 	void LoadFromXml(const tinyxml2::XMLDocument& doc) override;
@@ -622,7 +622,7 @@ private:
 
 	NiPoint3 m_respawnPos;
 
-	NiQuaternion m_respawnRot;
+	NiQuaternion m_respawnRot = QuatUtils::IDENTITY;
 
 	std::map<LWOOBJID, Loot::Info> m_DroppedLoot;
 

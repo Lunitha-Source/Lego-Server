@@ -808,6 +808,15 @@ void SlashCommandHandler::Startup() {
 	};
 	RegisterCommand(DeleteInvenCommand);
 
+	Command ExecuteCommand{
+		.help = "Execute commands with modified context (Minecraft-style)",
+		.info = "Execute commands as different entities or from different positions. Usage: /execute <subcommand> ... run <command>. Subcommands: as <entity>, at <entity>, positioned <x> <y> <z>",
+		.aliases = { "execute", "exec" },
+		.handle = DEVGMCommands::Execute,
+		.requiredLevel = eGameMasterLevel::DEVELOPER
+	};
+	RegisterCommand(ExecuteCommand);
+
 	// Register Greater Than Zero Commands
 
 	Command KickCommand{
@@ -1043,7 +1052,7 @@ void SlashCommandHandler::Startup() {
 		.info = "Resurrects the player",
 		.aliases = { "resurrect" },
 		.handle = GMZeroCommands::Resurrect,
-		.requiredLevel = eGameMasterLevel::CIVILIAN
+		.requiredLevel = eGameMasterLevel::DEVELOPER
 	};
 	RegisterCommand(ResurrectCommand);
 

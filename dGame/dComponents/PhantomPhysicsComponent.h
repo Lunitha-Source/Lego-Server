@@ -28,7 +28,7 @@ class PhantomPhysicsComponent final : public PhysicsComponent {
 public:
 	static constexpr eReplicaComponentType ComponentType = eReplicaComponentType::PHANTOM_PHYSICS;
 
-	PhantomPhysicsComponent(Entity* parent, int32_t componentId);
+	PhantomPhysicsComponent(Entity* parent, const int32_t componentID);
 	~PhantomPhysicsComponent() override;
 	void Update(float deltaTime) override;
 	void Serialize(RakNet::BitStream& outBitStream, bool bIsInitialUpdate) override;
@@ -175,5 +175,5 @@ private:
 	/**
 	 * If this is a respawn volume, the exact rotation an entity will respawn
 	 */
-	NiQuaternion m_RespawnRot;
+	NiQuaternion m_RespawnRot = QuatUtils::IDENTITY;
 };

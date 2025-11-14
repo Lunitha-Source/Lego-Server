@@ -32,8 +32,8 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
-RacingControlComponent::RacingControlComponent(Entity* parent)
-	: Component(parent) {
+RacingControlComponent::RacingControlComponent(Entity* parent, const int32_t componentID)
+	: Component(parent, componentID) {
 	m_PathName = u"MainPath";
 	m_NumberOfLaps = 3;
 	m_RemainingLaps = m_NumberOfLaps;
@@ -123,7 +123,7 @@ void RacingControlComponent::LoadPlayerVehicle(Entity* player,
 
 	auto spawnPointEntities = Game::entityManager->GetEntitiesByLOT(4843);
 	auto startPosition = NiPoint3Constant::ZERO;
-	auto startRotation = NiQuaternionConstant::IDENTITY;
+	auto startRotation = QuatUtils::IDENTITY;
 	const std::string placementAsString = std::to_string(positionNumber);
 	for (auto entity : spawnPointEntities) {
 		if (!entity) continue;

@@ -18,7 +18,6 @@ class AMFBaseValue;
 class AMFArrayValue;
 class Entity;
 class Item;
-class NiQuaternion;
 class User;
 class Leaderboard;
 class PropertySelectQueryProperty;
@@ -44,6 +43,7 @@ enum class eQuickBuildState : uint32_t;
 enum class BehaviorSlot : int32_t;
 enum class eVendorTransactionResult : uint32_t;
 enum class eReponseMoveItemBetweenInventoryTypeCode : int32_t;
+enum class eMissionState : int;
 
 enum class eCameraTargetCyclingMode : int32_t {
 	ALLOW_CYCLE_TEAMMATES,
@@ -58,6 +58,7 @@ namespace GameMessages {
 
 		// Sends a message to the entity manager to route to the target
 		bool Send();
+		bool Send(const LWOOBJID _target);
 
 		// Sends the message to the specified client or
 		// all clients if UNASSIGNED_SYSTEM_ADDRESS is specified
@@ -152,7 +153,6 @@ namespace GameMessages {
 	void SendStop2DAmbientSound(Entity* entity, bool force, std::string audioGUID, bool result = false);
 	void SendPlay2DAmbientSound(Entity* entity, std::string audioGUID, bool result = false);
 	void SendSetNetworkScriptVar(Entity* entity, const SystemAddress& sysAddr, std::string data);
-	void SendDropClientLoot(Entity* entity, const LWOOBJID& sourceID, LOT item, int currency, NiPoint3 spawnPos = NiPoint3Constant::ZERO, int count = 1);
 
 	void SendSetPlayerControlScheme(Entity* entity, eControlScheme controlScheme);
 	void SendPlayerReachedRespawnCheckpoint(Entity* entity, const NiPoint3& position, const NiQuaternion& rotation);
@@ -765,7 +765,7 @@ namespace GameMessages {
 		void Handle(Entity& entity, const SystemAddress& sysAddr) override;
 
 		NiPoint3 target{};
-		NiQuaternion rotation{};
+		NiQuaternion rotation = QuatUtils::IDENTITY;
 	};
 
 	struct ChildLoaded : public GameMsg {
@@ -793,6 +793,7 @@ namespace GameMessages {
 		AMFArrayValue* info{};
 		AMFArrayValue* subCategory{};
 		bool bVerbose{};
+		LWOOBJID clientID{};
 
 		GetObjectReportInfo() : GameMsg(MessageType::Game::GET_OBJECT_REPORT_INFO, eGameMasterLevel::DEVELOPER) {}
 	};
@@ -847,13 +848,18 @@ namespace GameMessages {
 
 	struct ResetModelToDefaults : public GameMsg {
 		ResetModelToDefaults() : GameMsg(MessageType::Game::RESET_MODEL_TO_DEFAULTS) {}
+
+		bool bResetPos{ true };
+		bool bResetRot{ true };
+		bool bUnSmash{ true };
+		bool bResetBehaviors{ true };
 	};
 
 	struct EmotePlayed : public GameMsg {
 		EmotePlayed() : GameMsg(MessageType::Game::EMOTE_PLAYED), emoteID(0), targetID(0) {}
-	
+
 		void Serialize(RakNet::BitStream& stream) const override;
-	
+
 		int32_t emoteID;
 		LWOOBJID targetID;
 	};
@@ -870,6 +876,66 @@ namespace GameMessages {
 		int32_t factionID{};
 
 		bool bIgnoreChecks{ false };
+	};
+
+	struct DropClientLoot : public GameMsg {
+		DropClientLoot() : GameMsg(MessageType::Game::DROP_CLIENT_LOOT) {}
+
+		void Serialize(RakNet::BitStream& stream) const override;
+		LWOOBJID sourceID{ LWOOBJID_EMPTY };
+		LOT item{ LOT_NULL };
+		int32_t currency{};
+		NiPoint3 spawnPos{};
+		NiPoint3 finalPosition{};
+		int32_t count{};
+		bool bUsePosition{};
+		LWOOBJID lootID{ LWOOBJID_EMPTY };
+		LWOOBJID ownerID{ LWOOBJID_EMPTY };
+	};
+
+	struct GetMissionState : public GameMsg {
+		GetMissionState() : GameMsg(MessageType::Game::GET_MISSION_STATE) {}
+
+		int32_t missionID{};
+		eMissionState missionState{};
+		bool cooldownInfoRequested{};
+		bool cooldownFinished{};
+	};
+
+	struct GetFlag : public GameMsg {
+		GetFlag() : GameMsg(MessageType::Game::GET_FLAG) {}
+
+		uint32_t flagID{};
+		bool flag{};
+	};
+
+	struct GetFactionTokenType : public GameMsg {
+		GetFactionTokenType() : GameMsg(MessageType::Game::GET_FACTION_TOKEN_TYPE) {}
+
+		LOT tokenType{ LOT_NULL };
+	};
+
+	struct MissionNeedsLot : public GameMsg {
+		MissionNeedsLot() : GameMsg(MessageType::Game::MISSION_NEEDS_LOT) {}
+
+		LOT item{};
+	};
+
+	struct PickupItem : public GameMsg {
+		PickupItem() : GameMsg(MessageType::Game::PICKUP_ITEM) {}
+
+		void Handle(Entity& entity, const SystemAddress& sysAddr) override;
+		bool Deserialize(RakNet::BitStream& stream) override;
+		LWOOBJID lootID{};
+		LWOOBJID lootOwnerID{};
+	};
+
+	struct TeamPickupItem : public GameMsg {
+		TeamPickupItem() : GameMsg(MessageType::Game::TEAM_PICKUP_ITEM) {}
+
+		void Serialize(RakNet::BitStream& stream) const override;
+		LWOOBJID lootID{};
+		LWOOBJID lootOwnerID{};
 	};
 };
 #endif // GAMEMESSAGES_H

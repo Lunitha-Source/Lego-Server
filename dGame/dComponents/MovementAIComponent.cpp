@@ -26,7 +26,7 @@ namespace {
 	std::map<LOT, float> m_PhysicsSpeedCache;
 }
 
-MovementAIComponent::MovementAIComponent(Entity* parent, MovementAIInfo info) : Component(parent) {
+MovementAIComponent::MovementAIComponent(Entity* parent, const int32_t componentID, MovementAIInfo info) : Component(parent, componentID) {
 	m_Info = info;
 	m_AtFinalWaypoint = true;
 
@@ -83,7 +83,7 @@ void MovementAIComponent::Resume() {
 	m_Paused = false;
 	SetVelocity(m_SavedVelocity);
 	m_SavedVelocity = NiPoint3Constant::ZERO;
-	SetRotation(NiQuaternion::LookAt(m_Parent->GetPosition(), m_NextWaypoint));
+	SetRotation(QuatUtils::LookAt(m_Parent->GetPosition(), m_NextWaypoint));
 	Game::entityManager->SerializeEntity(m_Parent);
 }
 
@@ -154,7 +154,7 @@ void MovementAIComponent::Update(const float deltaTime) {
 			m_TimeTravelled = 0.0f;
 			m_TimeToTravel = length / speed;
 
-			SetRotation(NiQuaternion::LookAt(source, m_NextWaypoint));
+			SetRotation(QuatUtils::LookAt(source, m_NextWaypoint));
 		}
 	} else {
 		// Check if there are more waypoints in the queue, if so set our next destination to the next waypoint

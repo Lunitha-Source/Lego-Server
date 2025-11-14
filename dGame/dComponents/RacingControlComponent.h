@@ -48,7 +48,7 @@ struct RacingPlayerInfo {
 	/**
 	 * Rotation that the player will respawn at if they smash their car
 	 */
-	NiQuaternion respawnRotation;
+	NiQuaternion respawnRotation = QuatUtils::IDENTITY;
 
 	/**
 	 * The index in the respawn point the player is now at
@@ -108,7 +108,7 @@ class RacingControlComponent final : public Component {
 public:
 	static constexpr eReplicaComponentType ComponentType = eReplicaComponentType::RACING_CONTROL;
 
-	RacingControlComponent(Entity* parentEntity);
+	RacingControlComponent(Entity* parentEntity, const int32_t componentID);
 	~RacingControlComponent();
 
 	void Serialize(RakNet::BitStream& outBitStream, bool bIsInitialUpdate) override;
